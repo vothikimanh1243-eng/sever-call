@@ -92,6 +92,35 @@
             color: #6e93b0;
             margin-top: 4px;
         }
+        .login-box .demo-ids {
+            background: rgba(74,172,255,0.05);
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-top: 12px;
+            border: 1px solid rgba(74,172,255,0.1);
+        }
+        .login-box .demo-ids p {
+            font-size: 0.75rem;
+            color: #6e93b0;
+            margin-bottom: 4px;
+        }
+        .login-box .demo-ids .id-list {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .login-box .demo-ids .id-list span {
+            background: rgba(74,172,255,0.1);
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            color: #4aacff;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .login-box .demo-ids .id-list span:hover {
+            background: rgba(74,172,255,0.2);
+        }
         
         /* ===== MAIN ===== */
         .container {
@@ -624,7 +653,7 @@
             .modal-box { padding: 24px 20px; margin: 16px; }
         }
         
-        /* ===== MOBILE MODE (giao diện điện thoại) ===== */
+        /* ===== MOBILE MODE ===== */
         .container.mobile-mode {
             flex-direction: column;
         }
@@ -718,11 +747,17 @@
             </div>
             <div class="form-group" id="subIdGroup">
                 <label><i class="fas fa-qrcode"></i> ID 6 số của bạn</label>
-                <input type="text" id="subId" placeholder="Nhập ID 6 số..." maxlength="6">
+                <input type="text" id="subId" placeholder="Nhập ID 6 số..." maxlength="6" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
                 <div class="info-text">* ID được Admin cấp (6 chữ số)</div>
             </div>
             <button class="btn-login" id="loginBtn"><i class="fas fa-sign-in-alt"></i> Đăng nhập</button>
             <div class="error" id="loginError"></div>
+            <div class="demo-ids">
+                <p>📌 ID mẫu để test (bấm để điền):</p>
+                <div class="id-list" id="demoIdList">
+                    <!-- Sẽ được tạo động -->
+                </div>
+            </div>
         </div>
     </div>
 
@@ -734,7 +769,7 @@
             <div class="current-id" id="currentAdminIdDisplay">ID hiện tại: <strong>888888</strong></div>
             <div class="form-group">
                 <label><i class="fas fa-key"></i> ID Admin mới (6 số)</label>
-                <input type="text" id="newAdminId" placeholder="Nhập ID 6 số..." maxlength="6">
+                <input type="text" id="newAdminId" placeholder="Nhập ID 6 số..." maxlength="6" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
             </div>
             <div class="btn-group">
                 <button class="btn-confirm" onclick="confirmChangeAdminId()"><i class="fas fa-check"></i> Xác nhận</button>
@@ -839,16 +874,48 @@
 
     <script>
         // ============================================================
-        // CẤU HÌNH
+        // CẤU HÌNH - SỬA LỖI MÁY PHỤ KHÔNG ĐĂNG NHẬP ĐƯỢC
         // ============================================================
         let ADMIN_PASSWORD = '682010@?';
         let ADMIN_ID = '888888';
         let isMobileMode = false;
 
         // ============================================================
-        // DỮ LIỆU
+        // DỮ LIỆU - KHỞI TẠO SẴN MÁY PHỤ ĐỂ TEST
         // ============================================================
-        let subDevices = [];
+        let subDevices = [
+            {
+                id: '123456',
+                name: 'Máy A',
+                status: 'online',
+                camOn: true,
+                micOn: true,
+                chatHistory: [
+                    { from: 'system', text: 'Máy A (123456) đã được kết nối.', time: new Date().toLocaleTimeString() }
+                ]
+            },
+            {
+                id: '654321',
+                name: 'Máy B',
+                status: 'online',
+                camOn: true,
+                micOn: true,
+                chatHistory: [
+                    { from: 'system', text: 'Máy B (654321) đã được kết nối.', time: new Date().toLocaleTimeString() }
+                ]
+            },
+            {
+                id: '789012',
+                name: 'Máy C',
+                status: 'online',
+                camOn: true,
+                micOn: true,
+                chatHistory: [
+                    { from: 'system', text: 'Máy C (789012) đã được kết nối.', time: new Date().toLocaleTimeString() }
+                ]
+            }
+        ];
+        
         let currentChatId = null;
         let currentRole = null;
         let currentUserId = null;
@@ -908,6 +975,7 @@
             };
             subDevices.push(newDevice);
             renderDeviceList();
+            updateDemoIds();
             addSystemMessage(`✅ Đã thêm máy phụ: ${name} (ID: ${id})`);
             alert(`✅ Đã thêm máy phụ!\n\nTên: ${name}\nID: ${id}\n\n📌 Hãy gửi ID này cho nhân viên.`);
             document.getElementById('subId').value = id;
@@ -923,13 +991,28 @@
                 subDevices = subDevices.filter(d => d.id !== id);
                 if (currentChatId === id) currentChatId = null;
                 renderDeviceList();
-                updateChatHeader();
+                updateDemoIds();
                 addSystemMessage(`🗑️ Đã xóa máy phụ ID: ${id}`);
             }
         }
 
         function getDeviceById(id) {
             return subDevices.find(d => d.id === id);
+        }
+
+        // ============================================================
+        // CẬP NHẬT DANH SÁCH ID MẪU
+        // ============================================================
+        function updateDemoIds() {
+            const container = document.getElementById('demoIdList');
+            const ids = subDevices.map(d => d.id);
+            if (ids.length === 0) {
+                container.innerHTML = '<span style="color:#6e93b0;font-size:0.7rem;">Chưa có máy phụ nào</span>';
+                return;
+            }
+            container.innerHTML = ids.map(id => `
+                <span onclick="document.getElementById('subId').value='${id}'">${id}</span>
+            `).join('');
         }
 
         // ============================================================
@@ -959,7 +1042,6 @@
                 alert('⚠️ ID mới trùng với ID cũ!');
                 return;
             }
-            // Kiểm tra trùng với máy phụ
             if (subDevices.some(d => d.id === newId)) {
                 alert('❌ ID này đã được sử dụng bởi máy phụ khác!');
                 return;
@@ -968,7 +1050,6 @@
             const oldId = ADMIN_ID;
             ADMIN_ID = newId;
             
-            // Cập nhật badge
             if (currentRole === 'admin') {
                 document.getElementById('userBadge').textContent = 'Admin ' + ADMIN_ID;
             }
@@ -991,15 +1072,12 @@
                 container.classList.add('mobile-mode');
                 btn.innerHTML = '<i class="fas fa-desktop"></i>';
                 btn.title = 'Chuyển sang máy tính';
-                document.querySelector('.theme-btn i').className = 'fas fa-desktop';
             } else {
                 container.classList.remove('mobile-mode');
                 btn.innerHTML = '<i class="fas fa-mobile-alt"></i>';
                 btn.title = 'Chuyển sang điện thoại';
-                document.querySelector('.theme-btn i').className = 'fas fa-mobile-alt';
             }
             
-            // Cập nhật lại kích thước video
             setTimeout(() => {
                 window.dispatchEvent(new Event('resize'));
             }, 300);
@@ -1034,13 +1112,14 @@
                 const statusClass = d.status === 'online' ? 'online' : d.status === 'calling' ? 'calling' : 'offline';
                 const avatarLetter = d.name.charAt(0).toUpperCase();
                 const isAdmin = currentRole === 'admin';
+                const isSelf = !isAdmin && d.id === currentUserId;
                 
                 return `
                     <div class="device-item ${isActive ? 'active' : ''}" onclick="selectChat('${d.id}')">
                         <div class="info">
                             <div class="avatar ${d.status === 'online' ? '' : 'offline'}">${avatarLetter}</div>
                             <div style="min-width:0;">
-                                <div class="name">${d.name}</div>
+                                <div class="name">${d.name} ${isSelf ? '👈' : ''}</div>
                                 <div class="id">ID: ${d.id}</div>
                             </div>
                             <span class="status-dot ${statusClass}"></span>
@@ -1057,7 +1136,6 @@
                                     <i class="fas fa-trash"></i>
                                 </button>
                             ` : ''}
-                            ${!isAdmin && d.id === currentUserId ? `<span style="font-size:0.6rem;color:#5cb85c;">● Bạn</span>` : ''}
                         </div>
                     </div>
                 `;
@@ -1464,7 +1542,7 @@
         }
 
         // ============================================================
-        // ĐĂNG NHẬP
+        // ĐĂNG NHẬP - SỬA LỖI MÁY PHỤ KHÔNG ĐĂNG NHẬP ĐƯỢC
         // ============================================================
         document.getElementById('roleSelect').addEventListener('change', function() {
             const isAdmin = this.value === 'admin';
@@ -1491,31 +1569,42 @@
                 document.getElementById('loginOverlay').style.display = 'none';
                 document.getElementById('mainApp').style.display = 'flex';
                 addSystemMessage('👋 Xin chào Admin! Bạn có thể quản lý các máy phụ.');
-                if (subDevices.length === 0) {
-                    setTimeout(() => {
-                        addSubDevice();
-                        addSubDevice();
-                    }, 500);
-                }
                 renderDeviceList();
+                updateDemoIds();
             } else {
+                // MÁY PHỤ - KIỂM TRA ID CHÍNH XÁC
                 const id = document.getElementById('subId').value.trim();
+                
+                // Kiểm tra ID rỗng
+                if (!id) {
+                    errorEl.textContent = '❌ Vui lòng nhập ID!';
+                    errorEl.style.display = 'block';
+                    return;
+                }
+                
+                // Kiểm tra ID có phải 6 số không
                 if (!isValidId(id)) {
                     errorEl.textContent = '❌ ID phải là 6 chữ số!';
                     errorEl.style.display = 'block';
                     return;
                 }
+                
+                // Kiểm tra ID có phải của Admin không
                 if (id === ADMIN_ID) {
                     errorEl.textContent = '❌ Đây là ID Admin! Vui lòng nhập ID máy phụ.';
                     errorEl.style.display = 'block';
                     return;
                 }
+                
+                // Tìm máy phụ theo ID
                 const device = getDeviceById(id);
                 if (!device) {
-                    errorEl.textContent = '❌ ID không hợp lệ! Vui lòng liên hệ admin để được cấp ID.';
+                    errorEl.textContent = '❌ ID không tồn tại! Vui lòng liên hệ admin để được cấp ID.';
                     errorEl.style.display = 'block';
                     return;
                 }
+                
+                // ĐĂNG NHẬP THÀNH CÔNG
                 currentRole = 'sub';
                 currentUserId = id;
                 device.status = 'online';
@@ -1524,11 +1613,13 @@
                 document.getElementById('loginOverlay').style.display = 'none';
                 document.getElementById('mainApp').style.display = 'flex';
                 renderDeviceList();
+                updateDemoIds();
                 addSystemMessage(`👋 Xin chào ${device.name}! Bạn đã kết nối thành công.`);
                 selectChat(id);
             }
         });
 
+        // Enter để login
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Enter' && document.getElementById('loginOverlay').style.display !== 'none') {
                 document.getElementById('loginBtn').click();
@@ -1552,7 +1643,6 @@
                 document.getElementById('mainApp').style.display = 'none';
                 renderDeviceList();
                 resetCallUI();
-                // Reset mobile mode
                 if (isMobileMode) {
                     isMobileMode = false;
                     document.getElementById('mainApp').classList.remove('mobile-mode');
@@ -1565,10 +1655,11 @@
         // KHỞI TẠO
         // ============================================================
         renderDeviceList();
+        updateDemoIds();
         console.log('✅ Call Center Pro đã sẵn sàng!');
         console.log('📌 Mật khẩu admin: admin123');
-        console.log('📌 Admin ID: 888888 (có thể đổi)');
-        console.log('📌 Các máy phụ có ID 6 số ngẫu nhiên');
+        console.log('📌 Admin ID: 888888');
+        console.log('📌 ID máy phụ mẫu: 123456, 654321, 789012');
         console.log('📱 Nhấn nút điện thoại để đổi giao diện Mobile/Desktop');
     </script>
 </body>
