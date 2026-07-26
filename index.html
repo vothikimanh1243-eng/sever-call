@@ -874,14 +874,14 @@
 
     <script>
         // ============================================================
-        // CẤU HÌNH - SỬA LỖI MÁY PHỤ KHÔNG ĐĂNG NHẬP ĐƯỢC
+        // CẤU HÌNH
         // ============================================================
         let ADMIN_PASSWORD = '682010@?';
         let ADMIN_ID = '888888';
         let isMobileMode = false;
 
         // ============================================================
-        // DỮ LIỆU - KHỞI TẠO SẴN MÁY PHỤ ĐỂ TEST
+        // DỮ LIỆU - KHỞI TẠO SẴN MÁY PHỤ
         // ============================================================
         let subDevices = [
             {
@@ -1113,29 +1113,34 @@
                 const avatarLetter = d.name.charAt(0).toUpperCase();
                 const isAdmin = currentRole === 'admin';
                 const isSelf = !isAdmin && d.id === currentUserId;
+                // Kiểm tra xem có đang gọi không
+                const isCallingTarget = isInCall && callTargetId === d.id;
                 
                 return `
-                    <div class="device-item ${isActive ? 'active' : ''}" onclick="selectChat('${d.id}')">
+                    <div class="device-item ${isActive || isCallingTarget ? 'active' : ''}" onclick="selectChat('${d.id}')">
                         <div class="info">
                             <div class="avatar ${d.status === 'online' ? '' : 'offline'}">${avatarLetter}</div>
                             <div style="min-width:0;">
-                                <div class="name">${d.name} ${isSelf ? '👈' : ''}</div>
+                                <div class="name">${d.name} ${isSelf ? '👈' : ''} ${isCallingTarget ? '📞' : ''}</div>
                                 <div class="id">ID: ${d.id}</div>
                             </div>
                             <span class="status-dot ${statusClass}"></span>
                         </div>
                         <div class="actions">
-                            ${isAdmin ? `
+                            ${!isSelf ? `
                                 <button class="video-btn" onclick="event.stopPropagation();startVideoCall('${d.id}')" title="Gọi video">
                                     <i class="fas fa-video"></i>
                                 </button>
                                 <button class="call-btn" onclick="event.stopPropagation();startAudioCall('${d.id}')" title="Gọi thoại">
                                     <i class="fas fa-phone"></i>
                                 </button>
+                            ` : ''}
+                            ${isAdmin && !isSelf ? `
                                 <button onclick="event.stopPropagation();removeSubDevice('${d.id}')" title="Xóa" style="color:#ff6b6b;">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             ` : ''}
+                            ${isSelf ? `<span style="font-size:0.6rem;color:#5cb85c;">● Bạn</span>` : ''}
                         </div>
                     </div>
                 `;
@@ -1239,39 +1244,46 @@
         }
 
         // ============================================================
-        // VIDEO CALL
+        // VIDEO CALL - CẢ 2 BÊN ĐỀU CÓ THỂ GỌI
         // ============================================================
         async function startVideoCall(id) {
-            if (currentRole !== 'admin') {
-                alert('❌ Chỉ Admin mới có quyền gọi!');
+            // KHÔNG CẦN CHECK ROLE NỮA - CẢ 2 BÊN ĐỀU GỌI ĐƯỢC
+            const device = getDeviceById(id);
+            if (!device) {
+                alert('❌ Không tìm thấy máy!');
                 return;
             }
-            const device = getDeviceById(id);
-            if (!device) return;
             if (isInCall) {
-                alert('Đang có cuộc gọi khác!');
+                alert('⚠️ Đang có cuộc gọi khác!');
                 return;
             }
             if (device.status === 'calling') {
-                alert('Máy này đang trong cuộc gọi!');
+                alert('⚠️ Máy này đang trong cuộc gọi!');
+                return;
+            }
+            if (id === currentUserId) {
+                alert('❌ Không thể gọi chính mình!');
                 return;
             }
             await startCall(id, 'video');
         }
 
         async function startAudioCall(id) {
-            if (currentRole !== 'admin') {
-                alert('❌ Chỉ Admin mới có quyền gọi!');
+            const device = getDeviceById(id);
+            if (!device) {
+                alert('❌ Không tìm thấy máy!');
                 return;
             }
-            const device = getDeviceById(id);
-            if (!device) return;
             if (isInCall) {
-                alert('Đang có cuộc gọi khác!');
+                alert('⚠️ Đang có cuộc gọi khác!');
                 return;
             }
             if (device.status === 'calling') {
-                alert('Máy này đang trong cuộc gọi!');
+                alert('⚠️ Máy này đang trong cuộc gọi!');
+                return;
+            }
+            if (id === currentUserId) {
+                alert('❌ Không thể gọi chính mình!');
                 return;
             }
             await startCall(id, 'audio');
@@ -1328,7 +1340,7 @@
                 document.getElementById('chatOverlay').classList.add('show');
                 isChatOpen = true;
                 document.getElementById('chatMessages').innerHTML = `
-                    <div class="msg system">--- Đang kết nối cuộc gọi ${type === 'video' ? 'video' : 'thoại'} ---</div>
+                    <div class="msg system">--- Đang kết nối cuộc gọi ${type === 'video' ? 'video' : 'thoại'} với ${device.name} ---</div>
                 `;
                 
                 callStartTime = Date.now();
@@ -1346,7 +1358,7 @@
                             <span class="timer" id="callTimer">00:00</span>
                         `;
                         document.getElementById('chatMessages').innerHTML = `
-                            <div class="msg system">--- Cuộc gọi đã kết nối ---</div>
+                            <div class="msg system">--- Cuộc gọi đã kết nối với ${device.name} ---</div>
                         `;
                         addSystemMessage(`📞 Đã kết nối với ${device.name}`);
                     }
@@ -1378,7 +1390,8 @@
                     ctx.fillStyle = '#fff';
                     ctx.font = '40px Inter';
                     ctx.textAlign = 'center';
-                    ctx.fillText('📹 ' + (currentRole === 'admin' ? 'Máy phụ' : 'Admin'), 320, 240);
+                    const target = getDeviceById(callTargetId);
+                    ctx.fillText('📹 ' + (target ? target.name : 'Đối phương'), 320, 240);
                     ctx.font = '20px Inter';
                     ctx.fillText('Đang kết nối...', 320, 300);
                     hue = (hue + 1) % 360;
@@ -1389,9 +1402,10 @@
                 remoteVideo._drawInterval = drawInterval;
             } else {
                 document.getElementById('remotePlaceholder').style.display = 'flex';
+                const target = getDeviceById(callTargetId);
                 document.getElementById('remotePlaceholder').innerHTML = `
                     <i class="fas fa-headset" style="font-size:2rem;color:#4aacff;"></i>
-                    <span>Cuộc gọi thoại với ${currentRole === 'admin' ? 'máy phụ' : 'admin'}</span>
+                    <span>Cuộc gọi thoại với ${target ? target.name : 'đối phương'}</span>
                 `;
                 remoteVideo.style.display = 'none';
             }
@@ -1527,7 +1541,7 @@
             document.getElementById('remotePlaceholder').style.display = 'flex';
             document.getElementById('remotePlaceholder').innerHTML = `
                 <i class="fas fa-user-circle"></i>
-                <span>Chọn máy phụ để gọi video</span>
+                <span>Chọn người để gọi video</span>
             `;
             document.getElementById('remoteCamOff').style.display = 'none';
             
@@ -1542,7 +1556,7 @@
         }
 
         // ============================================================
-        // ĐĂNG NHẬP - SỬA LỖI MÁY PHỤ KHÔNG ĐĂNG NHẬP ĐƯỢC
+        // ĐĂNG NHẬP
         // ============================================================
         document.getElementById('roleSelect').addEventListener('change', function() {
             const isAdmin = this.value === 'admin';
@@ -1572,31 +1586,26 @@
                 renderDeviceList();
                 updateDemoIds();
             } else {
-                // MÁY PHỤ - KIỂM TRA ID CHÍNH XÁC
                 const id = document.getElementById('subId').value.trim();
                 
-                // Kiểm tra ID rỗng
                 if (!id) {
                     errorEl.textContent = '❌ Vui lòng nhập ID!';
                     errorEl.style.display = 'block';
                     return;
                 }
                 
-                // Kiểm tra ID có phải 6 số không
                 if (!isValidId(id)) {
                     errorEl.textContent = '❌ ID phải là 6 chữ số!';
                     errorEl.style.display = 'block';
                     return;
                 }
                 
-                // Kiểm tra ID có phải của Admin không
                 if (id === ADMIN_ID) {
                     errorEl.textContent = '❌ Đây là ID Admin! Vui lòng nhập ID máy phụ.';
                     errorEl.style.display = 'block';
                     return;
                 }
                 
-                // Tìm máy phụ theo ID
                 const device = getDeviceById(id);
                 if (!device) {
                     errorEl.textContent = '❌ ID không tồn tại! Vui lòng liên hệ admin để được cấp ID.';
@@ -1604,7 +1613,6 @@
                     return;
                 }
                 
-                // ĐĂNG NHẬP THÀNH CÔNG
                 currentRole = 'sub';
                 currentUserId = id;
                 device.status = 'online';
@@ -1619,7 +1627,6 @@
             }
         });
 
-        // Enter để login
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Enter' && document.getElementById('loginOverlay').style.display !== 'none') {
                 document.getElementById('loginBtn').click();
@@ -1660,6 +1667,7 @@
         console.log('📌 Mật khẩu admin: admin123');
         console.log('📌 Admin ID: 888888');
         console.log('📌 ID máy phụ mẫu: 123456, 654321, 789012');
+        console.log('📌 CẢ 2 BÊN ĐỀU CÓ THỂ GỌI CHO NHAU!');
         console.log('📱 Nhấn nút điện thoại để đổi giao diện Mobile/Desktop');
     </script>
 </body>
