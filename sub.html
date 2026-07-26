@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Máy phụ - Call Center Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0e17;
+            min-height: 100vh;
+            color: #eef4fa;
+            overflow: hidden;
+        }
+        
+        .login-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(16px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        .login-overlay.hidden { display: none; }
+        .login-box {
+            background: #111b2a;
+            border-radius: 32px;
+            padding: 40px 48px;
+            max-width: 420px;
+            width: 100%;
+            border: 1px solid rgba(255,255,255,0.06);
+            box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+        }
+        .login-box .logo { text-align: center; margin-bottom: 28px; }
+        .login-box .logo i { font-size: 3rem; color: #5cb85c; }
+        .login-box .logo h2 { color: #cfe2f5; margin-top: 8px; }
+        .login-box .logo p { color: #6e93b0; font-size: 0.85rem; }
+        .login-box .form-group { margin-bottom: 14px; }
+        .login-box .form-group label {
+            display: block;
+            font-size: 0.8rem;
+            color: #8bbce6;
+            margin-bottom: 4px;
+        }
+        .login-box .form-group input {
+            width: 100%;
+            padding: 10px 14px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            color: #eef4fa;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            outline: none;
+            transition: 0.3s;
+        }
+        .login-box .form-group input:focus { border-color: #5cb85c; }
+        .login-box .btn-login {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #5cb85c, #3d8b3d);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.3s;
+            font-family: 'Inter', sans-serif;
+        }
+        .login-box .btn-login:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(92,184,92,0.3); }
+        .login-box .error {
+            color: #ff6b6b;
+            font-size: 0.85rem;
+            text-align: center;
+            margin-top: 10px;
+            display: none;
+        }
+        .login-box .server-info {
+            font-size: 0.7rem;
+            color: #6e93b0;
+            text-align: center;
+            margin-top: 10px;
+        }
+        .login-box .demo-ids {
+            background: rgba(92,184,92,0.05);
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-top: 12px;
+            border: 1px solid rgba(92,184,92,0.1);
+        }
+        .login-box .demo-ids p {
+            font-size: 0.75rem;
+            color: #6e93b0;
+            margin-bottom: 4px;
+        }
+        .login-box .demo-ids .id-list {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .login-box .demo-ids .id-list span {
+            background: rgba(92,184,92,0.1);
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            color: #5cb85c;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .login-box .demo-ids .id-list span:hover { background: rgba(92,184,92,0.2); }
+        
+        .container {
+            display: flex;
+            height: 100vh;
+            background: #0a0e17;
+        }
+        .container.hidden { display: none; }
+        
+        .sidebar {
+            width: 280px;
+            min-width: 280px;
+            background: #111b2a;
+            border-right: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+        }
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .sidebar-header h2 {
+            font-size: 1.1rem;
+            color: #cfe2f5;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .sidebar-header h2 i { color: #5cb85c; }
+        .sidebar-header .user-badge {
+            font-size: 0.7rem;
+            padding: 4px 12px;
+            border-radius: 20px;
+            background: rgba(92,184,92,0.15);
+            color: #5cb85c;
+            font-weight: 600;
+        }
+        .device-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 0;
+        }
+        .device-list::-webkit-scrollbar { width: 3px; }
+        .device-list::-webkit-scrollbar-thumb { background: #2f6288; border-radius: 10px; }
+        .device-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            border-radius: 12px;
+            transition: 0.3s;
+            border: 1px solid transparent;
+            margin-bottom: 2px;
+            background: rgba(255,255,255,0.02);
+        }
+        .device-item:hover { background: rgba(255,255,255,0.04); }
+        .device-item.active { border-color: #5cb85c; background: rgba(92,184,92,0.08); }
+        .device-item .info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            min-width: 0;
+        }
+        .device-item .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #5cb85c, #3d8b3d);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+        .device-item .avatar.offline { background: #3a3a4a; }
+        .device-item .name {
+            font-weight: 500;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .device-item .id {
+            font-size: 0.65rem;
+            color: #6e93b0;
+        }
+        .device-item .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+        .device-item .status-dot.online { background: #5cb85c; }
+        .device-item .status-dot.offline { background: #6e93b0; }
+        .device-item .status-dot.calling { background: #ffc107; animation: pulse 1s infinite; }
+        .device-item .actions { display: flex; gap: 4px; }
+        .device-item .actions button {
+            background: rgba(255,255,255,0.05);
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            color: #8bbce6;
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 0.75rem;
+        }
+        .device-item .actions button:hover { background: rgba(92,184,92,0.15); }
+        .device-item .actions .call-btn { color: #5cb85c; }
+        .device-item .actions .call-btn:hover { background: rgba(92,184,92,0.15); }
+        .device-item .actions .video-btn { color: #4aacff; }
+        .device-item .actions .video-btn:hover { background: rgba(74,172,255,0.15); }
+        
+        .sidebar-footer {
+            padding-top: 12px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            gap: 8px;
+        }
+        .sidebar-footer button {
+            flex: 1;
+            padding: 8px;
+            background: rgba(255,107,107,0.1);
+            border: 1px dashed rgba(255,107,107,0.2);
+            border-radius: 10px;
+            color: #ff6b6b;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.75rem;
+            transition: 0.3s;
+        }
+        .sidebar-footer button:hover { background: rgba(255,107,107,0.2); }
+        
+        .video-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #0a0e17;
+            position: relative;
+        }
+        .video-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            background: radial-gradient(ellipse at center, #0d1a2a, #080c14);
+        }
+        .video-box {
+            flex: 1;
+            max-width: 65%;
+            aspect-ratio: 16/9;
+            background: #111b2a;
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .video-box video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background: #0a141f;
+        }
+        .video-box .placeholder {
+            color: #6e93b0;
+            font-size: 1rem;
+            text-align: center;
+        }
+        .video-box .placeholder i { font-size: 3rem; display: block; margin-bottom: 12px; opacity: 0.3; }
+        .video-box .video-label {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            background: rgba(0,0,0,0.6);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            backdrop-filter: blur(4px);
+        }
+        .video-box.small {
+            max-width: 25%;
+            position: absolute;
+            bottom: 80px;
+            right: 20px;
+            border: 2px solid #5cb85c;
+            border-radius: 16px;
+            cursor: pointer;
+            z-index: 10;
+        }
+        .video-box.small .video-label { font-size: 0.6rem; bottom: 8px; left: 8px; }
+        
+        .call-status {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(8px);
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            border: 1px solid rgba(255,255,255,0.05);
+            z-index: 12;
+            display: none;
+        }
+        .call-status.show { display: block; }
+        .call-status .timer { color: #5cb85c; font-weight: 600; }
+        
+        .call-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(16px);
+            padding: 12px 20px;
+            border-radius: 50px;
+            border: 1px solid rgba(255,255,255,0.06);
+            z-index: 15;
+        }
+        .call-controls button {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255,255,255,0.05);
+            color: #eef4fa;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .call-controls button:hover { background: rgba(255,255,255,0.1); }
+        .call-controls button.active { background: rgba(92,184,92,0.2); color: #5cb85c; }
+        .call-controls button.mic-off { background: rgba(255,107,107,0.2); color: #ff6b6b; }
+        .call-controls button.cam-off { background: rgba(255,107,107,0.2); color: #ff6b6b; }
+        .call-controls button.end-call {
+            background: #ff6b6b;
+            color: #fff;
+            width: 56px;
+            height: 56px;
+        }
+        .call-controls button.end-call:hover { background: #ff4444; transform: scale(1.05); }
+        .call-controls button i { pointer-events: none; }
+        
+        .chat-overlay {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            max-width: 500px;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.06);
+            display: none;
+            flex-direction: column;
+            max-height: 300px;
+            z-index: 20;
+        }
+        .chat-overlay.show { display: flex; }
+        .chat-overlay .messages {
+            flex: 1;
+            padding: 12px 16px;
+            overflow-y: auto;
+            max-height: 200px;
+            font-size: 0.85rem;
+        }
+        .chat-overlay .messages .msg {
+            margin-bottom: 4px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            display: inline-block;
+            max-width: 80%;
+        }
+        .chat-overlay .messages .msg.sent {
+            background: #5cb85c;
+            color: #fff;
+            align-self: flex-end;
+            float: right;
+            clear: both;
+        }
+        .chat-overlay .messages .msg.received {
+            background: rgba(255,255,255,0.1);
+            float: left;
+            clear: both;
+        }
+        .chat-overlay .messages .msg.system {
+            text-align: center;
+            color: #6e93b0;
+            font-style: italic;
+            font-size: 0.75rem;
+            float: none;
+            display: block;
+            max-width: 100%;
+            background: none;
+        }
+        .chat-overlay .chat-input {
+            display: flex;
+            padding: 8px 12px 12px;
+            gap: 8px;
+        }
+        .chat-overlay .chat-input input {
+            flex: 1;
+            padding: 8px 14px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 30px;
+            color: #eef4fa;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            outline: none;
+        }
+        .chat-overlay .chat-input input:focus { border-color: #5cb85c; }
+        .chat-overlay .chat-input button {
+            padding: 8px 16px;
+            background: #5cb85c;
+            border: none;
+            border-radius: 30px;
+            color: #fff;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.8); }
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar { width: 200px; min-width: 200px; padding: 12px; }
+            .video-box { max-width: 100%; }
+            .video-box.small { max-width: 35%; bottom: 100px; right: 10px; }
+            .call-controls { gap: 8px; padding: 10px 16px; }
+            .call-controls button { width: 40px; height: 40px; font-size: 0.9rem; }
+            .call-controls button.end-call { width: 48px; height: 48px; }
+            .chat-overlay { width: 90%; bottom: 120px; }
+            .login-box { padding: 30px 24px; margin: 20px; }
+        }
+        @media (max-width: 500px) {
+            .sidebar { width: 60px; min-width: 60px; padding: 8px; }
+            .sidebar-header h2 { display: none; }
+            .device-item .name, .device-item .id, .device-item .actions { display: none; }
+            .device-item .avatar { width: 32px; height: 32px; font-size: 0.7rem; }
+            .video-box.small { max-width: 50%; bottom: 90px; right: 6px; }
+        }
+        
+        .container.mobile-mode {
+            flex-direction: column;
+        }
+        .container.mobile-mode .sidebar {
+            width: 100%;
+            min-width: 100%;
+            max-height: 180px;
+            border-right: none;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding: 10px 12px;
+        }
+        .container.mobile-mode .sidebar-header h2 { font-size: 0.9rem; }
+        .container.mobile-mode .device-list {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding: 4px 0;
+            flex: none;
+        }
+        .container.mobile-mode .device-item {
+            flex: 0 0 auto;
+            min-width: 130px;
+            padding: 8px 12px;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+        .container.mobile-mode .device-item .info .name { font-size: 0.75rem; }
+        .container.mobile-mode .device-item .info .id { font-size: 0.55rem; }
+        .container.mobile-mode .sidebar-footer { padding-top: 6px; }
+        .container.mobile-mode .sidebar-footer button { font-size: 0.6rem; padding: 4px 8px; }
+        .container.mobile-mode .video-box { max-width: 100%; border-radius: 12px; }
+        .container.mobile-mode .video-box.small { max-width: 30%; bottom: 70px; right: 10px; border-radius: 12px; }
+        .container.mobile-mode .call-controls { padding: 8px 14px; gap: 6px; bottom: 12px; }
+        .container.mobile-mode .call-controls button { width: 36px; height: 36px; font-size: 0.8rem; }
+        .container.mobile-mode .call-controls button.end-call { width: 42px; height: 42px; }
+        .container.mobile-mode .chat-overlay { width: 95%; bottom: 80px; max-height: 200px; }
+        .container.mobile-mode .chat-overlay .messages { max-height: 120px; font-size: 0.8rem; }
+        .container.mobile-mode .chat-overlay .chat-input input { font-size: 0.8rem; padding: 6px 12px; }
+        .container.mobile-mode .chat-overlay .chat-input button { font-size: 0.8rem; padding: 6px 12px; }
+        .container.mobile-mode .call-status { font-size: 0.7rem; padding: 4px 14px; top: 10px; }
+        .container.mobile-mode .video-container { padding: 10px; }
+        .container.mobile-mode .video-box .video-label { font-size: 0.6rem; padding: 2px 8px; }
+    </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-overlay" id="loginOverlay">
+    <div class="login-box">
+        <div class="logo">
+            <i class="fas fa-headset"></i>
+            <h2>Máy phụ</h2>
+            <p>Đăng nhập để nhận cuộc gọi</p>
+        </div>
+        <div class="form-group">
+            <label><i class="fas fa-server"></i> Server URL</label>
+            <input type="text" id="serverUrl" placeholder="http://localhost:3000" value="http://localhost:3000">
+        </div>
+        <div class="form-group">
+            <label><i class="fas fa-qrcode"></i> ID 6 số của bạn</label>
+            <input type="text" id="subId" placeholder="Nhập ID 6 số..." maxlength="6" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+        </div>
+        <button class="btn-login" id="loginBtn"><i class="fas fa-sign-in-alt"></i> Đăng nhập</button>
+        <div class="error" id="loginError"></div>
+        <div class="demo-ids">
+            <p>📌 ID mẫu để test (bấm để điền):</p>
+            <div class="id-list" id="demoIdList">
+                <span onclick="document.getElementById('subId').value='123456'">123456</span>
+                <span onclick="document.getElementById('subId').value='654321'">654321</span>
+                <span onclick="document.getElementById('subId').value='789012'">789012</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MAIN -->
+<div class="container hidden" id="mainApp">
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2><i class="fas fa-headset"></i> Máy phụ</h2>
+            <span class="user-badge" id="userBadge">Đang kết nối</span>
+        </div>
+        <div class="device-list" id="deviceList">
+            <div style="color:#6e93b0;text-align:center;padding:30px 10px;font-size:0.85rem;">
+                <i class="fas fa-spinner fa-spin" style="font-size:2rem;display:block;margin-bottom:10px;"></i>
+                Đang tải...
+            </div>
+        </div>
+        <div class="sidebar-footer">
+            <button onclick="logout()"><i class="fas fa-sign-out-alt"></i> Đăng xuất</button>
+        </div>
+    </div>
+
+    <div class="video-area">
+        <div class="video-container">
+            <div class="call-status" id="callStatus">
+                <i class="fas fa-phone"></i> Đang gọi đến <span id="callTargetName">...</span>
+                <span class="timer" id="callTimer">00:00</span>
+            </div>
+
+            <div class="video-box" id="remoteVideoBox">
+                <video id="remoteVideo" autoplay playsinline></video>
+                <div class="placeholder" id="remotePlaceholder">
+                    <i class="fas fa-user-circle"></i>
+                    <span>Chờ cuộc gọi</span>
+                </div>
+                <div class="video-label">Đối phương</div>
+                <div class="cam-off" id="remoteCamOff"><i class="fas fa-video-slash"></i></div>
+            </div>
+
+            <div class="video-box small" id="localVideoBox">
+                <video id="localVideo" autoplay playsinline muted></video>
+                <div class="placeholder" id="localPlaceholder">
+                    <i class="fas fa-video-slash"></i>
+                    <span>Cam tắt</span>
+                </div>
+                <div class="video-label">Bạn</div>
+                <div class="cam-off" id="localCamOff"><i class="fas fa-video-slash"></i></div>
+            </div>
+
+            <div class="chat-overlay" id="chatOverlay">
+                <div class="messages" id="chatMessages">
+                    <div class="msg system">--- Bắt đầu cuộc gọi ---</div>
+                </div>
+                <div class="chat-input">
+                    <input type="text" id="chatInput" placeholder="Nhắn tin..." onkeypress="if(event.key==='Enter') sendChatMessage()">
+                    <button onclick="sendChatMessage()"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+
+            <div class="call-controls" id="callControls">
+                <button onclick="toggleMic()" id="micBtn" class="active" title="Mic">
+                    <i class="fas fa-microphone"></i>
+                </button>
+                <button onclick="toggleCam()" id="camBtn" class="active" title="Camera">
+                    <i class="fas fa-video"></i>
+                </button>
+                <button onclick="toggleChat()" id="chatBtn" title="Chat">
+                    <i class="fas fa-comment-dots"></i>
+                </button>
+                <button onclick="switchCamera()" id="switchCamBtn" title="Xoay cam">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <button class="end-call" onclick="endCall()" title="Kết thúc cuộc gọi">
+                    <i class="fas fa-phone-slash"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+// ============================================================
+// SUB DEVICE - Call Center Pro
+// ============================================================
+
+let socket = null;
+let myDevice = null;
+let devices = [];
+let isInCall = false;
+let callTargetId = null;
+let callTimerInterval = null;
+let callStartTime = null;
+let isMicOn = true;
+let isCamOn = true;
+let isChatOpen = false;
+let localStream = null;
+let currentCallId = null;
+let isCaller = false;
+
+// ============================================================
+// DOM
+// ============================================================
+const loginOverlay = document.getElementById('loginOverlay');
+const mainApp = document.getElementById('mainApp');
+const loginBtn = document.getElementById('loginBtn');
+const loginError = document.getElementById('loginError');
+const serverUrlInput = document.getElementById('serverUrl');
+const subIdInput = document.getElementById('subId');
+const deviceList = document.getElementById('deviceList');
+const userBadge = document.getElementById('userBadge');
+
+// ============================================================
+// LOGIN
+// ============================================================
+loginBtn.addEventListener('click', function() {
+    const serverUrl = serverUrlInput.value.trim();
+    const id = subIdInput.value.trim();
+    
+    if (!serverUrl) {
+        loginError.textContent = '❌ Vui lòng nhập Server URL!';
+        loginError.style.display = 'block';
+        return;
+    }
+    if (!id || !/^\d{6}$/.test(id)) {
+        loginError.textContent = '❌ ID phải là 6 chữ số!';
+        loginError.style.display = 'block';
+        return;
+    }
+    
+    loginError.style.display = 'none';
+    loginBtn.textContent = 'Đang kết nối...';
+    loginBtn.disabled = true;
+    
+    socket = io(serverUrl);
+    
+    socket.on('connect', () => {
+        console.log('✅ Connected to server');
+        socket.emit('sub_login', { id: id });
+    });
+    
+    socket.on('sub_login_success', (data) => {
+        myDevice = data.device;
+        userBadge.textContent = myDevice.name + ' (' + myDevice.id + ')';
+        loginOverlay.classList.add('hidden');
+        mainApp.classList.remove('hidden');
+        loginBtn.textContent = 'Đăng nhập';
+        loginBtn.disabled = false;
+        renderDeviceList();
+        console.log('✅ Sub login success:', data);
+    });
+    
+    socket.on('sub_login_fail', (data) => {
+        loginError.textContent = '❌ ' + data.error;
+        loginError.style.display = 'block';
+        loginBtn.textContent = 'Đăng nhập';
+        loginBtn.disabled = false;
+        console.log('❌ Sub login fail:', data);
+    });
+    
+    socket.on('device_list', (data) => {
+        devices = data;
+        renderDeviceList();
+    });
+    
+    socket.on('connect_error', (err) => {
+        loginError.textContent = '❌ Không thể kết nối server!';
+        loginError.style.display = 'block';
+        loginBtn.textContent = 'Đăng nhập';
+        loginBtn.disabled = false;
+        console.error('Connect error:', err);
+    });
+    
+    // --- CALL EVENTS ---
+    socket.on('incoming_call', (data) => {
+        console.log('📞 Incoming call:', data);
+        currentCallId = data.callId;
+        isCaller = false;
+        if (confirm(`📞 ${data.fromName} đang gọi ${data.type === 'video' ? 'video' : 'thoại'} cho bạn. Nhận không?`)) {
+            // Nhận cuộc gọi
+            socket.emit('accept_call', { callId: data.callId });
+            startLocalStream(data.type);
+            document.getElementById('callStatus').innerHTML = `
+                <i class="fas fa-phone" style="color:#5cb85c;"></i> 
+                Đang đàm thoại với <span id="callTargetName">${data.fromName}</span>
+                <span class="timer" id="callTimer">00:00</span>
+            `;
+            document.getElementById('chatMessages').innerHTML = `
+                <div class="msg system">--- Cuộc gọi đã kết nối với ${data.fromName} ---</div>
+            `;
+            callStartTime = Date.now();
+            callTimerInterval = setInterval(updateCallTimer, 1000);
+            isInCall = true;
+            callTargetId = data.from;
+            renderDeviceList();
+        } else {
+            socket.emit('reject_call', { callId: data.callId });
+        }
+    });
+    
+    socket.on('call_connected', (data) => {
+        console.log('✅ Call connected:', data);
+        document.getElementById('callStatus').innerHTML = `
+            <i class="fas fa-phone" style="color:#5cb85c;"></i> 
+            Đang đàm thoại với <span id="callTargetName">${data.callerName}</span>
+            <span class="timer" id="callTimer">00:00</span>
+        `;
+        document.getElementById('chatMessages').innerHTML = `
+            <div class="msg system">--- Cuộc gọi đã kết nối với ${data.callerName} ---</div>
+        `;
+        callStartTime = Date.now();
+        callTimerInterval = setInterval(updateCallTimer, 1000);
+        isInCall = true;
+        callTargetId = data.callerId;
+        renderDeviceList();
+    });
+    
+    socket.on('call_ended', (data) => {
+        console.log('📞 Call ended:', data);
+        endCall();
+    });
+    
+    socket.on('force_logout', (data) => {
+        alert('⚠️ ' + data.reason);
+        logout();
+    });
+    
+    socket.on('new_message', (data) => {
+        const container = document.getElementById('chatMessages');
+        const div = document.createElement('div');
+        div.className = 'msg received';
+        div.textContent = data.text;
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+    });
+});
+
+// ============================================================
+// RENDER DEVICE LIST
+// ============================================================
+function renderDeviceList() {
+    const list = devices.filter(d => d.id !== (myDevice ? myDevice.id : ''));
+    
+    if (list.length === 0) {
+        deviceList.innerHTML = `
+            <div style="color:#6e93b0;text-align:center;padding:20px 10px;font-size:0.85rem;">
+                <i class="fas fa-plug" style="font-size:2rem;display:block;margin-bottom:10px;opacity:0.3;"></i>
+                Chỉ có mình bạn đang online
+            </div>
+        `;
+        return;
+    }
+    
+    deviceList.innerHTML = list.map(d => {
+        const statusClass = d.status === 'online' ? 'online' : 'calling' ? 'calling' : 'offline';
+        const avatarLetter = d.name.charAt(0).toUpperCase();
+        const isCalling = isInCall && callTargetId === d.id;
+        
+        return `
+            <div class="device-item ${isCalling ? 'active' : ''}">
+                <div class="info">
+                    <div class="avatar ${d.status === 'online' ? '' : 'offline'}">${avatarLetter}</div>
+                    <div style="min-width:0;">
+                        <div class="name">${d.name} ${isCalling ? '📞' : ''}</div>
+                        <div class="id">ID: ${d.id}</div>
+                    </div>
+                    <span class="status-dot ${statusClass}"></span>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// ============================================================
+// CHAT
+// ============================================================
+function sendChatMessage() {
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
+    if (!text || !isInCall || !socket) return;
+    
+    socket.emit('send_message', {
+        targetId: callTargetId,
+        text: text,
+        from: myDevice ? myDevice.name : 'sub'
+    });
+    input.value = '';
+    
+    const container = document.getElementById('chatMessages');
+    const div = document.createElement('div');
+    div.className = 'msg sent';
+    div.textContent = text;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+}
+
+function toggleChat() {
+    isChatOpen = !isChatOpen;
+    document.getElementById('chatOverlay').classList.toggle('show', isChatOpen);
+    document.getElementById('chatBtn').classList.toggle('active', isChatOpen);
+}
+
+// ============================================================
+// CALL
+// ============================================================
+async function startLocalStream(type) {
+    try {
+        const constraints = {
+            audio: true,
+            video: type === 'video' ? { facingMode: 'user' } : false
+        };
+        localStream = await navigator.mediaDevices.getUserMedia(constraints);
+        document.getElementById('localVideo').srcObject = localStream;
+        document.getElementById('localPlaceholder').style.display = 'none';
+        document.getElementById('localCamOff').style.display = 'none';
+        document.getElementById('localVideo').style.display = 'block';
+        
+        if (type === 'audio') {
+            document.getElementById('localVideo').style.display = 'none';
+            document.getElementById('localPlaceholder').style.display = 'flex';
+            document.getElementById('localPlaceholder').innerHTML = `
+                <i class="fas fa-phone" style="font-size:2rem;"></i>
+                <span>Cuộc gọi thoại</span>
+            `;
+        }
+        
+        isMicOn = true;
+        isCamOn = type === 'video';
+        document.getElementById('chatOverlay').classList.add('show');
+        isChatOpen = true;
+        
+        // Mô phỏng remote
+        document.getElementById('remotePlaceholder').innerHTML = `
+            <i class="fas fa-spinner fa-spin" style="font-size:2rem;"></i>
+            <span>Đang kết nối...</span>
+        `;
+        document.getElementById('remoteVideo').style.display = 'none';
+        
+        // Mô phỏng remote sau 1s
+        setTimeout(() => {
+            document.getElementById('remotePlaceholder').innerHTML = `
+                <i class="fas fa-user-circle" style="font-size:3rem;color:#4aacff;"></i>
+                <span>Đã kết nối</span>
+            `;
+        }, 1000);
+        
+    } catch (err) {
+        console.error('Lỗi:', err);
+        alert('❌ Không thể truy cập camera/mic!');
+    }
+}
+
+function toggleMic() {
+    if (!isInCall) return;
+    isMicOn = !isMicOn;
+    const btn = document.getElementById('micBtn');
+    btn.classList.toggle('mic-off', !isMicOn);
+    btn.classList.toggle('active', isMicOn);
+    btn.innerHTML = isMicOn ? '<i class="fas fa-microphone"></i>' : '<i class="fas fa-microphone-slash"></i>';
+    if (localStream) {
+        localStream.getAudioTracks().forEach(track => track.enabled = isMicOn);
+    }
+}
+
+function toggleCam() {
+    if (!isInCall) return;
+    isCamOn = !isCamOn;
+    const btn = document.getElementById('camBtn');
+    btn.classList.toggle('cam-off', !isCamOn);
+    btn.classList.toggle('active', isCamOn);
+    btn.innerHTML = isCamOn ? '<i class="fas fa-video"></i>' : '<i class="fas fa-video-slash"></i>';
+    
+    const localVideo = document.getElementById('localVideo');
+    const placeholder = document.getElementById('localPlaceholder');
+    const camOff = document.getElementById('localCamOff');
+    
+    if (isCamOn) {
+        localVideo.style.display = 'block';
+        placeholder.style.display = 'none';
+        camOff.style.display = 'none';
+    } else {
+        localVideo.style.display = 'none';
+        placeholder.style.display = 'flex';
+        camOff.style.display = 'block';
+    }
+    if (localStream) {
+        localStream.getVideoTracks().forEach(track => track.enabled = isCamOn);
+    }
+}
+
+function switchCamera() {
+    if (!isInCall || !isCamOn) return;
+    alert('🔄 Đã chuyển camera (mô phỏng)');
+}
+
+function endCall() {
+    if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+        localStream = null;
+    }
+    if (currentCallId && socket) {
+        socket.emit('end_call', { callId: currentCallId });
+    }
+    isInCall = false;
+    callTargetId = null;
+    currentCallId = null;
+    if (callTimerInterval) {
+        clearInterval(callTimerInterval);
+        callTimerInterval = null;
+    }
+    callStartTime = null;
+    
+    document.getElementById('callStatus').classList.remove('show');
+    document.getElementById('chatOverlay').classList.remove('show');
+    document.getElementById('localVideo').style.display = 'none';
+    document.getElementById('localVideo').srcObject = null;
+    document.getElementById('localPlaceholder').style.display = 'flex';
+    document.getElementById('localPlaceholder').innerHTML = `
+        <i class="fas fa-video-slash"></i>
+        <span>Cam tắt</span>
+    `;
+    document.getElementById('remoteVideo').style.display = 'none';
+    document.getElementById('remoteVideo').srcObject = null;
+    document.getElementById('remotePlaceholder').innerHTML = `
+        <i class="fas fa-user-circle"></i>
+        <span>Chờ cuộc gọi</span>
+    `;
+    renderDeviceList();
+}
+
+function updateCallTimer() {
+    if (!callStartTime) return;
+    const elapsed = Math.floor((Date.now() - callStartTime) / 1000);
+    const mins = String(Math.floor(elapsed / 60)).padStart(2, '0');
+    const secs = String(elapsed % 60).padStart(2, '0');
+    const timer = document.getElementById('callTimer');
+    if (timer) timer.textContent = `${mins}:${secs}`;
+}
+
+// ============================================================
+// LOGOUT
+// ============================================================
+function logout() {
+    if (socket) {
+        socket.disconnect();
+        socket = null;
+    }
+    if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+        localStream = null;
+    }
+    isInCall = false;
+    callTargetId = null;
+    loginOverlay.classList.remove('hidden');
+    mainApp.classList.add('hidden');
+    document.getElementById('chatMessages').innerHTML = `
+        <div class="msg system">--- Bắt đầu cuộc gọi ---</div>
+    `;
+    document.getElementById('callStatus').classList.remove('show');
+    document.getElementById('chatOverlay').classList.remove('show');
+    renderDeviceList();
+    console.log('👋 Logged out');
+}
+
+// ============================================================
+// KHỞI TẠO
+// ============================================================
+console.log('📱 Sub Device ready');
+console.log('🔑 ID mẫu: 123456, 654321, 789012');
+</script>
+</body>
+</html>
